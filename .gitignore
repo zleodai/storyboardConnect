@@ -31,3 +31,5 @@ dist-ssr
 # Go
 server/bin/
 server/tmp/
+
+.claude/
