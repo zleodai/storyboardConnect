@@ -17,6 +17,8 @@ type ArtistResponse struct {
 	Portfolio      []PortfolioProjectResponse `json:"portfolio"`
 	Availability   *AvailabilityResponse      `json:"availability,omitempty"`
 	IsPremium      *bool                      `json:"isPremium,omitempty"`
+	UploadDate     string                     `json:"uploadDate"`
+	ViewCount      int                        `json:"viewCount"`
 }
 
 // PortfolioProjectResponse is the JSON representation of a portfolio item.
@@ -67,6 +69,8 @@ func ToResponse(a Artist) ArtistResponse {
 		TopSkills:      skills,
 		BoardTypes:     boardTypes,
 		Portfolio:      portfolio,
+		UploadDate:     a.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"),
+		ViewCount:      a.ViewCount,
 	}
 
 	// Copy nullable fields

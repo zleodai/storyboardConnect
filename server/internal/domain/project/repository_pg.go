@@ -8,6 +8,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const projectColumns = `id, created_by, title, subtitle, image, logline, school,
+	          format, length, timeline, production_type, shotlist_ready, location_secured,
+	          is_paid, visual_deck_url, contact_twitter, contact_instagram, contact_email,
+	          view_count, created_at, updated_at`
+
 type pgRepository struct {
 	pool *pgxpool.Pool
 }
@@ -18,17 +23,18 @@ func NewRepository(pool *pgxpool.Pool) Repository {
 }
 
 func (r *pgRepository) FindAll(ctx context.Context, filter ProjectFilter) ([]Project, error) {
-	query := `SELECT id, created_by, title, subtitle, image, logline, school,
-	          format, length, timeline, production_type, shotlist_ready, location_secured,
-	          is_paid, visual_deck_url, contact_twitter, contact_instagram, contact_email,
-	          created_at, updated_at
-	          FROM projects WHERE 1=1`
+	query := `SELECT ` + projectColumns + ` FROM projects WHERE 1=1`
 	args := []any{}
 	argIdx := 1
 
 	if filter.SearchQuery != "" {
 		query += fmt.Sprintf(" AND (LOWER(title) LIKE LOWER($%d) OR LOWER(logline) LIKE LOWER($%d))", argIdx, argIdx)
 		args = append(args, "%"+filter.SearchQuery+"%")
+		argIdx++
+	}
+	if len(filter.Schools) > 0 {
+		query += fmt.Sprintf(" AND school = ANY($%d)", argIdx)
+		args = append(args, filter.Schools)
 		argIdx++
 	}
 	if len(filter.Formats) > 0 {
@@ -47,7 +53,7 @@ func (r *pgRepository) FindAll(ctx context.Context, filter ProjectFilter) ([]Pro
 		argIdx++
 	}
 
-	query += " ORDER BY created_at DESC"
+	query += orderByClause(filter.SortBy)
 
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -59,11 +65,7 @@ func (r *pgRepository) FindAll(ctx context.Context, filter ProjectFilter) ([]Pro
 }
 
 func (r *pgRepository) FindByID(ctx context.Context, id string) (*Project, error) {
-	query := `SELECT id, created_by, title, subtitle, image, logline, school,
-	          format, length, timeline, production_type, shotlist_ready, location_secured,
-	          is_paid, visual_deck_url, contact_twitter, contact_instagram, contact_email,
-	          created_at, updated_at
-	          FROM projects WHERE id = $1`
+	query := `SELECT ` + projectColumns + ` FROM projects WHERE id = $1`
 
 	row := r.pool.QueryRow(ctx, query, id)
 	p, err := scanProject(row)
@@ -77,11 +79,7 @@ func (r *pgRepository) FindByID(ctx context.Context, id string) (*Project, error
 }
 
 func (r *pgRepository) FindFeatured(ctx context.Context, limit int) ([]Project, error) {
-	query := `SELECT id, created_by, title, subtitle, image, logline, school,
-	          format, length, timeline, production_type, shotlist_ready, location_secured,
-	          is_paid, visual_deck_url, contact_twitter, contact_instagram, contact_email,
-	          created_at, updated_at
-	          FROM projects WHERE is_featured = TRUE
+	query := `SELECT ` + projectColumns + ` FROM projects WHERE is_featured = TRUE
 	          ORDER BY created_at DESC LIMIT $1`
 
 	rows, err := r.pool.Query(ctx, query, limit)
@@ -124,6 +122,16 @@ func (r *pgRepository) FindApplication(ctx context.Context, projectID, userID st
 	return &app, nil
 }
 
+// orderByClause returns a safe ORDER BY clause based on sortBy value.
+func orderByClause(sortBy string) string {
+	switch sortBy {
+	case "views":
+		return " ORDER BY view_count DESC"
+	default:
+		return " ORDER BY created_at DESC"
+	}
+}
+
 func scanProjects(rows pgx.Rows) ([]Project, error) {
 	var projects []Project
 	for rows.Next() {
@@ -146,7 +154,7 @@ func scanProject(row pgx.Row) (*Project, error) {
 		&p.School, &p.Format, &p.Length, &p.Timeline, &p.ProductionType,
 		&p.ShotlistReady, &p.LocationSecured, &p.IsPaid, &p.VisualDeckURL,
 		&p.ContactInfo.Twitter, &p.ContactInfo.Instagram, &p.ContactInfo.Email,
-		&p.CreatedAt, &p.UpdatedAt,
+		&p.ViewCount, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -161,7 +169,7 @@ func scanProjectFromRows(rows pgx.Rows) (*Project, error) {
 		&p.School, &p.Format, &p.Length, &p.Timeline, &p.ProductionType,
 		&p.ShotlistReady, &p.LocationSecured, &p.IsPaid, &p.VisualDeckURL,
 		&p.ContactInfo.Twitter, &p.ContactInfo.Instagram, &p.ContactInfo.Email,
-		&p.CreatedAt, &p.UpdatedAt,
+		&p.ViewCount, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scan project: %w", err)

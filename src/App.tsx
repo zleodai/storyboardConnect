@@ -1,10 +1,13 @@
 import React from 'react';
+import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import { FilterProvider } from './contexts/FilterContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { useApp } from './hooks/useApp';
+import { useAuth } from './hooks/useAuth';
 import { useModal } from './hooks/useModal';
 import { Layout } from './components/layout/Layout';
+import { SignInPage } from './components/pages/SignInPage';
 import { LandingPage } from './components/pages/LandingPage';
 import { GridView } from './components/pages/GridView';
 import { CommunityPage } from './components/pages/CommunityPage';
@@ -17,11 +20,25 @@ import { Project } from './types/project.types';
 
 const AppContent: React.FC = () => {
   const { hasEnteredSite, currentPage } = useApp();
+  const { user, loading } = useAuth();
   const { modalState, closeModal } = useModal();
+  const [hasDismissedSignIn, setHasDismissedSignIn] = React.useState(false);
 
   // Render current page based on state
   const renderPage = () => {
     if (!hasEnteredSite) {
+      if (loading) {
+        return (
+          <div className="flex flex-1 items-center justify-center bg-[#090909] text-gray-400">
+            Loading...
+          </div>
+        );
+      }
+
+      if (!user && !hasDismissedSignIn) {
+        return <SignInPage onContinueWithoutSignIn={() => setHasDismissedSignIn(true)} />;
+      }
+
       return <LandingPage />;
     }
 
@@ -38,6 +55,12 @@ const AppContent: React.FC = () => {
         return <GridView />;
     }
   };
+
+  React.useEffect(() => {
+    if (user && hasDismissedSignIn) {
+      setHasDismissedSignIn(false);
+    }
+  }, [user, hasDismissedSignIn]);
 
   return (
     <Layout showNavbar={hasEnteredSite}>
@@ -65,13 +88,15 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <AppProvider>
-      <FilterProvider>
-        <ModalProvider>
-          <AppContent />
-        </ModalProvider>
-      </FilterProvider>
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <FilterProvider>
+          <ModalProvider>
+            <AppContent />
+          </ModalProvider>
+        </FilterProvider>
+      </AppProvider>
+    </AuthProvider>
   );
 }
 

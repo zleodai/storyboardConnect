@@ -17,6 +17,8 @@ type ProjectResponse struct {
 	IsPaid          bool                `json:"isPaid"`
 	VisualDeckURL   *string             `json:"visualDeckUrl,omitempty"`
 	ContactInfo     ContactInfoResponse `json:"contactInfo"`
+	UploadDate      string              `json:"uploadDate"`
+	ViewCount       int                 `json:"viewCount"`
 }
 
 // ContactInfoResponse is the JSON representation of contact info.
@@ -47,7 +49,9 @@ func ToResponse(p Project) ProjectResponse {
 		ShotlistReady:   p.ShotlistReady,
 		LocationSecured: p.LocationSecured,
 		IsPaid:          p.IsPaid,
-		ContactInfo: ContactInfoResponse{},
+		ContactInfo:     ContactInfoResponse{},
+		UploadDate:      p.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"),
+		ViewCount:       p.ViewCount,
 	}
 
 	// Defensive copies of nullable fields

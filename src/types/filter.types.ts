@@ -1,3 +1,5 @@
+export type SortBy = 'date' | 'views';
+
 export interface FilterState {
   searchQuery: string;
   selectedSchools: string[];
@@ -5,6 +7,7 @@ export interface FilterState {
   selectedFormats: string[];
   selectedProductionTypes: string[];
   selectedTimelines: string[];
+  sortBy: SortBy;
 }
 
 export type ViewMode = 'artist' | 'project';

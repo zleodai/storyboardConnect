@@ -11,17 +11,24 @@ type ArtistFilter struct {
 	SearchQuery string
 	Schools     []string
 	BoardTypes  []string
+	SortBy      string
 }
 
 // ParseFilter extracts artist filter parameters from URL query values.
 // It handles both comma-separated and repeated parameter formats.
 func ParseFilter(query url.Values) ArtistFilter {
+	sortBy := validator.SanitizeString(query.Get("sortBy"))
+	if !validator.ValidateEnum(sortBy, []string{"date"}) {
+		sortBy = "date"
+	}
+
 	return ArtistFilter{
 		SearchQuery: validator.SanitizeString(
 			validator.TruncateString(query.Get("searchQuery"), 200),
 		),
 		Schools:    parseArrayParam(query, "selectedSchools"),
 		BoardTypes: parseArrayParam(query, "selectedBoardTypes"),
+		SortBy:     sortBy,
 	}
 }
 

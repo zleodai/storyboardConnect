@@ -1,11 +1,10 @@
 import React from 'react';
 import { useApp } from '../../hooks/useApp';
-import { useModal } from '../../hooks/useModal';
-import { Artist } from '../../types/artist.types';
+import { useAuth } from '../../hooks/useAuth';
 
 export const Navbar: React.FC = () => {
   const { viewMode, setViewMode, setCurrentPage, currentPage } = useApp();
-  const { openArtistModal } = useModal();
+  const { user, loading, loginWithGoogle, logout } = useAuth();
 
   const handlePageSwitch = (page: 'grid' | 'community' | 'news' | 'events') => {
     setCurrentPage(page);
@@ -18,25 +17,6 @@ export const Navbar: React.FC = () => {
 
   const goHome = () => {
     window.location.reload();
-  };
-
-  // Mock current user data - in production this would come from auth context
-  const mockCurrentUser: Artist = {
-    id: '1',
-    name: 'Nicholas Wu',
-    avatar: '/images/nicholas_avatar.jpg',
-    banner: '/images/banner_main.jpg',
-    school: 'LMU',
-    major: 'Film & TV Production',
-    graduationYear: '2024',
-    about: 'Nicholas Wu is a storyboard artist and animator in Los Angeles, California.',
-    topSkills: ['Storyboard Pro', 'Blender', 'Photoshop'],
-    boardTypes: ['Action Board', 'Cinematic'],
-    portfolio: [],
-  };
-
-  const openProfile = () => {
-    openArtistModal(mockCurrentUser);
   };
 
   return (
@@ -107,17 +87,33 @@ export const Navbar: React.FC = () => {
           Find Projects
         </a>
 
-        {/* User Avatar */}
-        <div
-          className="w-8 h-8 rounded-full border border-gray-500 overflow-hidden cursor-pointer"
-          onClick={openProfile}
-        >
-          <img
-            src={mockCurrentUser.avatar}
-            className="w-full h-full object-cover"
-            alt="User"
-          />
-        </div>
+        {loading ? (
+          <span className="text-gray-500">Loading...</span>
+        ) : user ? (
+          <>
+            <button
+              type="button"
+              onClick={logout}
+              className="text-gray-400 hover:text-white transition"
+            >
+              Sign Out
+            </button>
+            <div
+              className="w-8 h-8 rounded-full border border-gray-500 overflow-hidden flex items-center justify-center text-xs font-bold text-white"
+              title={user.email}
+            >
+              {user.email.slice(0, 1).toUpperCase()}
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={loginWithGoogle}
+            className="text-gray-400 hover:text-white transition"
+          >
+            Sign In
+          </button>
+        )}
       </div>
     </nav>
   );

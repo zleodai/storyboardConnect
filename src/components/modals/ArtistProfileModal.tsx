@@ -3,7 +3,6 @@ import { Artist } from '../../types/artist.types';
 import { Modal } from './Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { GlassPanel } from '../ui/GlassPanel';
 
 interface ArtistProfileModalProps {
   artist: Artist | null;

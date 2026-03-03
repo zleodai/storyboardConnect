@@ -43,6 +43,7 @@ type Artist struct {
 	Portfolio      []PortfolioProject
 	Availability   *Availability
 	IsPremium      bool
+	ViewCount      int
 	UserID         string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

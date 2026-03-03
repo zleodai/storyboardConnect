@@ -1,116 +1,74 @@
-# Storyboard Connect V2 - React TypeScript
+# Storyboard Connect V2
 
-A modern platform connecting storyboard artists with filmmakers, built with React, TypeScript, and Vite.
+A platform connecting storyboard artists with filmmakers, built as a Vite frontend plus Vercel Functions.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` to see the app!
+For local frontend-only development, visit `http://localhost:5173`.
 
-## 📖 About
+For full-stack Vercel-style development, use `vercel dev` after configuring env vars.
 
-Storyboard Connect is a platform for connecting artists. You can upload projects along with a pitch deck if you need help with a project. Additionally as an artist you can upload your portfolio and look at existing projects to work on.
+## Tech Stack
 
-## 🛠️ Tech Stack
+- React 18 + TypeScript
+- Vite 5
+- Vercel Node.js Functions
+- Tailwind CSS
+- Axios
+- `postgres`
+- `jose`
 
-- **Framework**: React 18.3 with TypeScript
-- **Build Tool**: Vite 5.4
-- **Styling**: Tailwind CSS 3.4 with custom cinema theme
-- **HTTP Client**: Axios 1.7
-- **State Management**: React Context + Hooks
-- **Icons**: Font Awesome 6.0
+## Project Structure
 
-## 📁 Project Structure
-
-```
+```text
 storyboardConnect/
-├── public/images/              # Image assets
-├── src/
-│   ├── components/
-│   │   ├── cards/             # ArtistCard, ProjectCard (reusable, data-driven)
-│   │   ├── filters/           # Filter components
-│   │   ├── layout/            # Navbar, Sidebar, Layout
-│   │   ├── modals/            # Artist & Project detail modals
-│   │   ├── pages/             # Landing, Grid, Community, News, Events
-│   │   └── ui/                # Base UI components (Button, Badge, etc.)
-│   ├── contexts/              # React Context providers
-│   ├── hooks/                 # Custom hooks
-│   ├── services/              # API service layer (Axios)
-│   ├── types/                 # TypeScript interfaces
-│   ├── utils/                 # Constants, mock data
-│   └── styles/                # Tailwind CSS + custom styles
-└── vite.config.ts
+|-- api/                  # Vercel Functions API
+|-- public/images/        # Image assets
+|-- src/                  # Frontend React app
+|-- server/               # Legacy Go backend reference only
+|-- supabase/schema.sql   # Baseline schema to apply in Supabase
+|-- vercel.json
 ```
 
-## 🔌 Backend Integration
+## Backend Integration
 
-The app is **ready for backend integration**. Currently using mock data for development.
+The app now expects a same-origin Vercel Functions API by default.
 
-### To Connect Your Backend:
+### Production setup
 
-1. **Set Backend URL** in `.env`:
-   ```
-   VITE_API_BASE_URL=http://localhost:3000/api
-   ```
+1. Apply `supabase/schema.sql` to your Supabase database.
+2. Set Vercel env vars from `.env.example`.
+3. Use the Supabase transaction pooler `DATABASE_URL` on port `6543`.
+4. Set `VITE_USE_MOCK_DATA=false`.
 
-2. **Disable Mock Data** in:
-   - `src/services/artistService.ts` - Set `USE_MOCK_DATA = false`
-   - `src/services/projectService.ts` - Set `USE_MOCK_DATA = false`
+### API Endpoints
 
-### Expected API Endpoints:
+- `GET /api/health`
+- `GET /api/artists`
+- `GET /api/artists/featured`
+- `GET /api/artists/:id`
+- `GET /api/projects`
+- `GET /api/projects/featured`
+- `GET /api/projects/:id`
+- `POST /api/projects/:id/apply`
+- `GET /api/auth/google`
+- `GET /api/auth/google/callback`
+- `GET /api/auth/me`
 
-#### Artists
-- `GET /api/artists` - List artists (supports filter query params)
-- `GET /api/artists/:id` - Get artist by ID
+## Commands
 
-#### Projects
-- `GET /api/projects` - List projects (supports filter query params)
-- `GET /api/projects/:id` - Get project by ID
-- `POST /api/projects/:id/apply` - Apply to project
+- `npm run dev` - Start the Vite frontend
+- `npm run build` - Build the frontend bundle
+- `npm run test` - Run Vitest
+- `npm run preview` - Preview the frontend production build
 
-See `src/types/` for complete TypeScript data models.
+## Deployment Notes
 
-## 🎨 Key Features
-
-- ✅ **Reusable Card Components** - ArtistCard and ProjectCard are data-driven blocks
-- ✅ **Type-Safe** - Full TypeScript support with strict typing
-- ✅ **Filter System** - Dynamic filters based on view mode
-- ✅ **Modal System** - Artist profiles and project details
-- ✅ **Context State Management** - App, Filter, and Modal contexts
-- ✅ **API Service Layer** - Centralized Axios client with interceptors
-- ✅ **Dark Cinema Theme** - Custom Tailwind theme with glass-morphism
-
-## 📝 Adding Mock Data
-
-Edit `src/utils/mockData.ts` to add test artists/projects:
-
-```typescript
-export const mockArtists: Artist[] = [
-  {
-    id: '2',
-    name: 'New Artist',
-    avatar: '/images/avatar.jpg',
-    // ... see types/artist.types.ts for full structure
-  }
-];
-```
-
-## 🚀 Commands
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-
-## 📚 Documentation
-
-- **Types**: See `src/types/` for all TypeScript interfaces
-- **Components**: All components are in `src/components/` organized by category
-- **API Services**: Backend integration logic in `src/services/`
-
----
-
-**Built with** React + TypeScript + Vite • **Ready for** Backend Integration
+- Frontend and API deploy together on Vercel.
+- Runtime migrations are intentionally removed; apply schema changes before deployment.
+- The Go backend under `server/` is no longer part of the deployment target.

@@ -24,4 +24,6 @@ export interface Artist {
     rate?: number;
   };
   isPremium?: boolean;
+  uploadDate: string;
+  viewCount: number;
 }

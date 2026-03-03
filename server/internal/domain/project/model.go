@@ -46,6 +46,7 @@ type Project struct {
 	IsPaid          bool
 	VisualDeckURL   *string
 	ContactInfo     ContactInfo
+	ViewCount       int
 	CreatedByUserID string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time

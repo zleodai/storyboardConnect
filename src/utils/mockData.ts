@@ -35,6 +35,8 @@ export const mockArtists: Artist[] = [
       nextAvailable: 'Oct 2025',
       rate: 450,
     },
+    uploadDate: '2025-06-15T10:00:00Z',
+    viewCount: 1240,
   },
   {
     id: '2',
@@ -70,6 +72,8 @@ export const mockArtists: Artist[] = [
       rate: 500,
     },
     isPremium: true,
+    uploadDate: '2025-08-22T14:30:00Z',
+    viewCount: 3450,
   },
   {
     id: '3',
@@ -104,6 +108,8 @@ export const mockArtists: Artist[] = [
       nextAvailable: 'Feb 2026',
       rate: 350,
     },
+    uploadDate: '2025-11-03T09:15:00Z',
+    viewCount: 870,
   },
   {
     id: '4',
@@ -137,6 +143,8 @@ export const mockArtists: Artist[] = [
       status: 'open',
       rate: 400,
     },
+    uploadDate: '2025-12-10T16:45:00Z',
+    viewCount: 2100,
   },
   {
     id: '5',
@@ -170,6 +178,8 @@ export const mockArtists: Artist[] = [
       status: 'unavailable',
     },
     isPremium: true,
+    uploadDate: '2026-01-18T11:00:00Z',
+    viewCount: 5670,
   },
 ];
 
@@ -195,6 +205,8 @@ export const mockProjects: Project[] = [
       instagram: '#',
       email: 'contact@example.com',
     },
+    uploadDate: '2025-07-10T08:00:00Z',
+    viewCount: 2340,
   },
   {
     id: '2',
@@ -202,7 +214,7 @@ export const mockProjects: Project[] = [
     subtitle: 'CalArts Senior Thesis Film',
     image: '/images/Soulstealers.jpg',
     logline:
-      'A retired astronaut suffering from memory loss discovers that the strange visions she keeps having aren\'t hallucinations — they\'re transmissions from a version of herself that never came home.',
+      'A retired astronaut suffering from memory loss discovers that the strange visions she keeps having aren\'t hallucinations \u2014 they\'re transmissions from a version of herself that never came home.',
     school: 'CalArts',
     format: 'Short Film',
     length: '12 min',
@@ -215,6 +227,8 @@ export const mockProjects: Project[] = [
       instagram: '#',
       email: 'parallax@example.com',
     },
+    uploadDate: '2025-09-05T12:00:00Z',
+    viewCount: 1870,
   },
   {
     id: '3',
@@ -236,6 +250,8 @@ export const mockProjects: Project[] = [
       twitter: '#',
       email: 'glassgarden@example.com',
     },
+    uploadDate: '2025-10-20T15:30:00Z',
+    viewCount: 950,
   },
   {
     id: '4',
@@ -258,6 +274,8 @@ export const mockProjects: Project[] = [
       instagram: '#',
       email: 'vanta@example.com',
     },
+    uploadDate: '2025-12-01T09:00:00Z',
+    viewCount: 4200,
   },
   {
     id: '5',
@@ -277,6 +295,8 @@ export const mockProjects: Project[] = [
     contactInfo: {
       email: 'undertow@example.com',
     },
+    uploadDate: '2026-01-08T14:00:00Z',
+    viewCount: 680,
   },
   {
     id: '6',
@@ -299,5 +319,7 @@ export const mockProjects: Project[] = [
       instagram: '#',
       email: 'midfreq@example.com',
     },
+    uploadDate: '2026-02-01T10:00:00Z',
+    viewCount: 3100,
   },
 ];

@@ -15,6 +15,7 @@ const initialFilters: FilterState = {
   selectedFormats: [],
   selectedProductionTypes: [],
   selectedTimelines: [],
+  sortBy: 'date',
 };
 
 export const FilterContext = createContext<FilterContextType | undefined>(undefined);

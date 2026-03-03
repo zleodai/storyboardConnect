@@ -75,7 +75,7 @@ func getEnvOrDefault(key, defaultVal string) string {
 // loadDotEnv reads a .env file from the current directory or parent directory
 // and sets environment variables that are not already set.
 func loadDotEnv() {
-	paths := []string{".env", "../.env"}
+	paths := []string{".env", "../.env", "server/.env"}
 	for _, path := range paths {
 		f, err := os.Open(path)
 		if err != nil {

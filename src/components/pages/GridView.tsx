@@ -1,15 +1,19 @@
 import React from 'react';
 import { useApp } from '../../hooks/useApp';
 import { useModal } from '../../hooks/useModal';
+import { useFilters } from '../../hooks/useFilters';
 import { useArtists } from '../../hooks/useArtists';
 import { useProjects } from '../../hooks/useProjects';
 import { ArtistCard } from '../cards/ArtistCard';
 import { ProjectCard } from '../cards/ProjectCard';
 import { Sidebar } from '../layout/Sidebar';
+import { ARTIST_SORT_OPTIONS, PROJECT_SORT_OPTIONS } from '../../utils/constants';
+import { SortBy } from '../../types/filter.types';
 
 export const GridView: React.FC = () => {
   const { viewMode } = useApp();
   const { openArtistModal, openProjectModal } = useModal();
+  const { filters, updateFilter } = useFilters();
   const { artists, loading: artistsLoading } = useArtists();
   const { projects, loading: projectsLoading } = useProjects();
 
@@ -28,8 +32,21 @@ export const GridView: React.FC = () => {
             <h2 className="text-2xl font-bold text-white">
               {isArtistMode ? 'Featured Artists' : 'Project Opportunities'}
             </h2>
-            <div className="text-sm text-gray-400">
-              {loading ? 'Loading...' : `Showing ${resultCount} results`}
+            <div className="flex items-center gap-4">
+              <select
+                value={filters.sortBy}
+                onChange={(e) => updateFilter('sortBy', e.target.value as SortBy)}
+                className="bg-[#1a1a1a] text-gray-300 text-sm border border-gray-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                {(isArtistMode ? ARTIST_SORT_OPTIONS : PROJECT_SORT_OPTIONS).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <div className="text-sm text-gray-400">
+                {loading ? 'Loading...' : `Showing ${resultCount} results`}
+              </div>
             </div>
           </div>
 

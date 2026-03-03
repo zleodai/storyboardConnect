@@ -3,7 +3,31 @@ import { Artist } from '../types/artist.types';
 import { FilterState } from '../types/filter.types';
 import { mockArtists } from '../utils/mockData';
 
-const USE_MOCK_DATA = true; // Set to false when backend is ready
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+function filterAndSortArtists(artists: Artist[], filters?: Partial<FilterState>): Artist[] {
+  let result = [...artists];
+
+  if (!filters) return result;
+
+  if (filters.searchQuery) {
+    const q = filters.searchQuery.toLowerCase();
+    result = result.filter((a) => a.name.toLowerCase().includes(q));
+  }
+  if (filters.selectedSchools && filters.selectedSchools.length > 0) {
+    result = result.filter((a) => filters.selectedSchools!.includes(a.school));
+  }
+  if (filters.selectedBoardTypes && filters.selectedBoardTypes.length > 0) {
+    result = result.filter((a) =>
+      a.boardTypes.some((bt) => filters.selectedBoardTypes!.includes(bt)),
+    );
+  }
+
+  // Artists always sort by date joined (newest first)
+  result.sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
+
+  return result;
+}
 
 export const artistService = {
   // GET /artists - with filters as query params
@@ -11,7 +35,7 @@ export const artistService = {
     if (USE_MOCK_DATA) {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
-      return mockArtists;
+      return filterAndSortArtists(mockArtists, filters);
     }
 
     const response = await apiClient.get<Artist[]>('/artists', {

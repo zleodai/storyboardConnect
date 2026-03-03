@@ -18,4 +18,6 @@ export interface Project {
     instagram?: string;
     email?: string;
   };
+  uploadDate: string;
+  viewCount: number;
 }

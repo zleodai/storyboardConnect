@@ -8,6 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const artistColumns = `id, user_id, name, avatar, banner, school, major, graduation_year,
+	          about, top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
+	          view_count, created_at, updated_at`
+
 type pgRepository struct {
 	pool *pgxpool.Pool
 }
@@ -18,10 +22,7 @@ func NewRepository(pool *pgxpool.Pool) Repository {
 }
 
 func (r *pgRepository) FindAll(ctx context.Context, filter ArtistFilter) ([]Artist, error) {
-	query := `SELECT id, user_id, name, avatar, banner, school, major, graduation_year,
-	          about, top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
-	          created_at, updated_at
-	          FROM artists WHERE 1=1`
+	query := `SELECT ` + artistColumns + ` FROM artists WHERE 1=1`
 	args := []any{}
 	argIdx := 1
 
@@ -41,7 +42,7 @@ func (r *pgRepository) FindAll(ctx context.Context, filter ArtistFilter) ([]Arti
 		argIdx++
 	}
 
-	query += " ORDER BY created_at DESC"
+	query += orderByClause(filter.SortBy)
 
 	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
@@ -58,10 +59,7 @@ func (r *pgRepository) FindAll(ctx context.Context, filter ArtistFilter) ([]Arti
 }
 
 func (r *pgRepository) FindByID(ctx context.Context, id string) (*Artist, error) {
-	query := `SELECT id, user_id, name, avatar, banner, school, major, graduation_year,
-	          about, top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
-	          created_at, updated_at
-	          FROM artists WHERE id = $1`
+	query := `SELECT ` + artistColumns + ` FROM artists WHERE id = $1`
 
 	row := r.pool.QueryRow(ctx, query, id)
 	a, err := scanArtist(row)
@@ -72,7 +70,6 @@ func (r *pgRepository) FindByID(ctx context.Context, id string) (*Artist, error)
 		return nil, fmt.Errorf("query artist by id: %w", err)
 	}
 
-	// Load portfolio
 	portfolio, err := r.loadPortfolio(ctx, a.ID)
 	if err != nil {
 		return nil, err
@@ -83,10 +80,7 @@ func (r *pgRepository) FindByID(ctx context.Context, id string) (*Artist, error)
 }
 
 func (r *pgRepository) FindFeatured(ctx context.Context, limit int) ([]Artist, error) {
-	query := `SELECT id, user_id, name, avatar, banner, school, major, graduation_year,
-	          about, top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
-	          created_at, updated_at
-	          FROM artists WHERE is_featured = TRUE
+	query := `SELECT ` + artistColumns + ` FROM artists WHERE is_featured = TRUE
 	          ORDER BY created_at DESC LIMIT $1`
 
 	rows, err := r.pool.Query(ctx, query, limit)
@@ -101,6 +95,12 @@ func (r *pgRepository) FindFeatured(ctx context.Context, limit int) ([]Artist, e
 	}
 
 	return r.loadPortfolios(ctx, artists)
+}
+
+// orderByClause returns a safe ORDER BY clause based on sortBy value.
+// Artists only support sorting by date (created_at DESC).
+func orderByClause(sortBy string) string {
+	return " ORDER BY created_at DESC"
 }
 
 // loadPortfolios loads portfolio projects for a batch of artists.
@@ -203,7 +203,7 @@ func scanArtist(row pgx.Row) (*Artist, error) {
 		&a.ID, &a.UserID, &a.Name, &a.Avatar, &a.Banner, &a.School,
 		&a.Major, &a.GraduationYear, &a.About, &a.TopSkills, &a.BoardTypes,
 		&a.IsPremium, &availStatus, &availNext, &availRate,
-		&a.CreatedAt, &a.UpdatedAt,
+		&a.ViewCount, &a.CreatedAt, &a.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -231,7 +231,7 @@ func scanArtistFromRows(rows pgx.Rows) (*Artist, error) {
 		&a.ID, &a.UserID, &a.Name, &a.Avatar, &a.Banner, &a.School,
 		&a.Major, &a.GraduationYear, &a.About, &a.TopSkills, &a.BoardTypes,
 		&a.IsPremium, &availStatus, &availNext, &availRate,
-		&a.CreatedAt, &a.UpdatedAt,
+		&a.ViewCount, &a.CreatedAt, &a.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scan artist: %w", err)
