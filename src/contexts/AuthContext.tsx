@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useEffect, useState, ReactNode } from 'react';
 import { apiClient } from '../services/api';
 import { AuthUser } from '../types/auth.types';
 
@@ -48,18 +48,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     bootstrapAuth();
   }, []);
 
-  const loginWithGoogle = () => {
+  const loginWithGoogle = useCallback(() => {
     window.location.href = '/api/auth/google';
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('authToken');
     setUser(null);
-  };
+  }, []);
 
-  const updateUserProfilePreview = (updates: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>) => {
+  const updateUserProfilePreview = useCallback((updates: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>) => {
     setUser((currentUser) => (currentUser ? { ...currentUser, ...updates } : currentUser));
-  };
+  }, []);
 
   return (
     <AuthContext.Provider
