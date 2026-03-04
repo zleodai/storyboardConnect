@@ -1,14 +1,18 @@
 import React from 'react';
 import { useApp } from '../../hooks/useApp';
 import { useFilters } from '../../hooks/useFilters';
+import { useSchoolCounts } from '../../hooks/useSchoolCounts';
 import { SearchInput } from '../filters/SearchInput';
 import { FilterGroup } from '../filters/FilterGroup';
 import { FilterCheckbox } from '../filters/FilterCheckbox';
-import { SCHOOLS, BOARD_TYPES, FORMATS, PRODUCTION_TYPES, TIMELINES } from '../../utils/constants';
+import { BOARD_TYPES, FORMATS, PRODUCTION_TYPES, SCHOOLS, TIMELINES } from '../../utils/constants';
 
 export const Sidebar: React.FC = () => {
   const { viewMode } = useApp();
   const { filters, updateFilter, toggleArrayFilter } = useFilters();
+  const { schools, loading: schoolsLoading } = useSchoolCounts(viewMode === 'artist');
+
+  const selectedSchool = filters.selectedSchools[0] ?? '';
 
   return (
     <aside className="w-72 bg-cinema-black border-r border-gray-800 flex flex-col p-6 overflow-y-auto shrink-0 transition-all duration-300">
@@ -32,14 +36,25 @@ export const Sidebar: React.FC = () => {
           <>
             {/* School Filter */}
             <FilterGroup title="School" className="border-b border-gray-800 pb-6">
-              {SCHOOLS.map((school) => (
-                <FilterCheckbox
-                  key={school.value}
-                  label={school.label}
-                  checked={filters.selectedSchools.includes(school.value)}
-                  onChange={() => toggleArrayFilter('selectedSchools', school.value)}
-                />
-              ))}
+              <select
+                value={selectedSchool}
+                onChange={(event) =>
+                  updateFilter(
+                    'selectedSchools',
+                    event.target.value ? [event.target.value] : [],
+                  )
+                }
+                className="w-full rounded-xl border border-gray-700 bg-[#111111] px-4 py-3 text-sm text-white outline-none transition focus:border-white"
+              >
+                <option value="">
+                  {schoolsLoading ? 'Loading schools...' : 'All schools'}
+                </option>
+                {schools.map((school) => (
+                  <option key={school.value} value={school.value}>
+                    {school.label} ({school.count ?? 0})
+                  </option>
+                ))}
+              </select>
             </FilterGroup>
 
             {/* Board Type Filter */}

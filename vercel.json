@@ -11,6 +11,7 @@
     { "source": "/api/auth/me", "destination": "/api/auth" },
     { "source": "/api/me/profile", "destination": "/api/auth" },
     { "source": "/api/artists", "destination": "/api/artists" },
+    { "source": "/api/artists/schools", "destination": "/api/artists" },
     { "source": "/api/artists/featured", "destination": "/api/artists" },
     { "source": "/api/artists/:id", "destination": "/api/artists" },
     { "source": "/api/projects", "destination": "/api/projects" },

@@ -67,4 +67,29 @@ export const artistService = {
     const response = await apiClient.get<Artist[]>('/artists/featured');
     return response.data;
   },
+
+  // GET /artists/schools
+  getSchoolCounts: async (): Promise<Array<{ label: string; value: string; count?: number }>> => {
+    if (USE_MOCK_DATA) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const counts = mockArtists.reduce<Record<string, number>>((acc, artist) => {
+        acc[artist.school] = (acc[artist.school] ?? 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(counts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([school, count]) => ({
+          label: school,
+          value: school,
+          count,
+        }));
+    }
+
+    const response = await apiClient.get<Array<{ label: string; value: string; count?: number }>>(
+      '/artists/schools',
+    );
+    return response.data;
+  },
 };

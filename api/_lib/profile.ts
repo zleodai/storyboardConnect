@@ -166,6 +166,47 @@ async function loadArtistProfile(userId: string): Promise<ArtistRow | null> {
   return artist ?? null;
 }
 
+async function syncSchoolCount(school: string): Promise<void> {
+  const normalizedSchool = school.trim();
+  if (!normalizedSchool) {
+    return;
+  }
+
+  const [countRow] = await sql<{ user_count: number }[]>`
+    SELECT COUNT(*)::INTEGER AS user_count
+    FROM artists
+    WHERE school = ${normalizedSchool}
+  `;
+
+  const userCount = countRow?.user_count ?? 0;
+  if (userCount <= 0) {
+    await sql`
+      DELETE FROM school_user_counts
+      WHERE school = ${normalizedSchool}
+    `;
+    return;
+  }
+
+  await sql`
+    INSERT INTO school_user_counts (school, user_count, updated_at)
+    VALUES (${normalizedSchool}, ${userCount}, NOW())
+    ON CONFLICT (school) DO UPDATE
+    SET
+      user_count = EXCLUDED.user_count,
+      updated_at = NOW()
+  `;
+}
+
+async function syncAffectedSchoolCounts(previousSchool: string, nextSchool: string): Promise<void> {
+  const uniqueSchools = Array.from(
+    new Set([previousSchool.trim(), nextSchool.trim()].filter(Boolean)),
+  );
+
+  for (const school of uniqueSchools) {
+    await syncSchoolCount(school);
+  }
+}
+
 export async function handleProfileRequest(request: RequestLike): Promise<Response> {
   const user = await getAuthenticatedUser(request);
   if (!user) {
@@ -216,6 +257,7 @@ export async function handleProfileRequest(request: RequestLike): Promise<Respon
     }
 
     try {
+      const existingArtist = await loadArtistProfile(user.id);
       await sql`
         UPDATE users
         SET
@@ -268,6 +310,7 @@ export async function handleProfileRequest(request: RequestLike): Promise<Respon
         avatar_url: avatarUrl || null,
       };
       const artist = await loadArtistProfile(user.id);
+      await syncAffectedSchoolCounts(existingArtist?.school || "", school);
 
       return json(200, toProfileResponse(updatedUser, artist));
     } catch (cause) {

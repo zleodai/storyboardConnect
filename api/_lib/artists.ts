@@ -1,9 +1,20 @@
 import { sql } from "./db.js";
-import { error, getPathSegments, internalServerError, json, methodNotAllowed, parseQuery } from "./http.js";
+import {
+  error,
+  getHeader,
+  getPathSegments,
+  internalServerError,
+  json,
+  methodNotAllowed,
+  parseQuery,
+  RequestLike,
+} from "./http.js";
 import { isUuid, parseArtistFilter } from "./filters.js";
+import { verifyAuthToken } from "./jwt.js";
 
 type ArtistRow = {
   id: string;
+  user_id: string;
   name: string;
   avatar: string;
   banner: string;
@@ -58,6 +69,17 @@ type ArtistResponse = {
   viewCount: number;
 };
 
+type SchoolCountRow = {
+  school: string;
+  user_count: number;
+};
+
+type SchoolCountResponse = {
+  value: string;
+  label: string;
+  count: number;
+};
+
 function mapArtist(row: ArtistRow, portfolio: PortfolioRow[]): ArtistResponse {
   const response: ArtistResponse = {
     id: row.id,
@@ -103,6 +125,20 @@ function mapArtist(row: ArtistRow, portfolio: PortfolioRow[]): ArtistResponse {
   return response;
 }
 
+async function getViewerUserId(request: RequestLike): Promise<string | null> {
+  const header = getHeader(request, "authorization");
+  if (!header || !header.startsWith("Bearer ")) {
+    return null;
+  }
+
+  try {
+    const payload = await verifyAuthToken(header.slice("Bearer ".length).trim());
+    return payload.sub || null;
+  } catch {
+    return null;
+  }
+}
+
 async function loadPortfolios(artistIds: string[]): Promise<Map<string, PortfolioRow[]>> {
   if (artistIds.length === 0) {
     return new Map();
@@ -129,11 +165,12 @@ export async function handleGetArtists(request: Request): Promise<Response> {
   }
 
   const filter = parseArtistFilter(parseQuery(request));
+  const viewerUserId = await getViewerUserId(request);
 
   try {
     const rows = await sql<ArtistRow[]>`
       SELECT
-        id, name, avatar, banner, school, major, graduation_year, about,
+        id, user_id, name, avatar, banner, school, major, graduation_year, about,
         top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
         view_count, created_at
       FROM artists
@@ -141,6 +178,9 @@ export async function handleGetArtists(request: Request): Promise<Response> {
     `;
 
     const filteredRows = rows.filter((row) => {
+      if (viewerUserId && row.user_id === viewerUserId) {
+        return false;
+      }
       if (filter.searchQuery && !row.name.toLowerCase().includes(filter.searchQuery.toLowerCase())) {
         return false;
       }
@@ -168,10 +208,12 @@ export async function handleGetFeaturedArtists(request: Request): Promise<Respon
     return methodNotAllowed(["GET"]);
   }
 
+  const viewerUserId = await getViewerUserId(request);
+
   try {
     const rows = await sql<ArtistRow[]>`
       SELECT
-        id, name, avatar, banner, school, major, graduation_year, about,
+        id, user_id, name, avatar, banner, school, major, graduation_year, about,
         top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
         view_count, created_at
       FROM artists
@@ -180,8 +222,33 @@ export async function handleGetFeaturedArtists(request: Request): Promise<Respon
       LIMIT 10
     `;
 
-    const portfolios = await loadPortfolios(rows.map((row) => row.id));
-    return json(200, rows.map((row) => mapArtist(row, portfolios.get(row.id) ?? [])));
+    const filteredRows = rows.filter((row) => !viewerUserId || row.user_id !== viewerUserId);
+    const portfolios = await loadPortfolios(filteredRows.map((row) => row.id));
+    return json(200, filteredRows.map((row) => mapArtist(row, portfolios.get(row.id) ?? [])));
+  } catch (cause) {
+    return internalServerError(cause);
+  }
+}
+
+export async function handleGetSchoolCounts(request: Request): Promise<Response> {
+  if (request.method !== "GET") {
+    return methodNotAllowed(["GET"]);
+  }
+
+  try {
+    const rows = await sql<SchoolCountRow[]>`
+      SELECT school, user_count
+      FROM school_user_counts
+      ORDER BY school ASC
+    `;
+
+    const payload: SchoolCountResponse[] = rows.map((row) => ({
+      value: row.school,
+      label: row.school,
+      count: row.user_count,
+    }));
+
+    return json(200, payload);
   } catch (cause) {
     return internalServerError(cause);
   }
@@ -201,7 +268,7 @@ export async function handleGetArtistById(request: Request): Promise<Response> {
   try {
     const [row] = await sql<ArtistRow[]>`
       SELECT
-        id, name, avatar, banner, school, major, graduation_year, about,
+        id, user_id, name, avatar, banner, school, major, graduation_year, about,
         top_skills, board_types, is_premium, avail_status, avail_next, avail_rate,
         view_count, created_at
       FROM artists

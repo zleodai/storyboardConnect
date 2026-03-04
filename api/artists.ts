@@ -1,4 +1,9 @@
-import { handleGetArtistById, handleGetArtists, handleGetFeaturedArtists } from "./_lib/artists.js";
+import {
+  handleGetArtistById,
+  handleGetArtists,
+  handleGetFeaturedArtists,
+  handleGetSchoolCounts,
+} from "./_lib/artists.js";
 import {
   error,
   getPathSegments,
@@ -20,6 +25,10 @@ async function route(request: RequestLike): Promise<Response> {
 
     if (rest.length === 1 && rest[0] === "featured") {
       return handleGetFeaturedArtists(request as Request);
+    }
+
+    if (rest.length === 1 && rest[0] === "schools") {
+      return handleGetSchoolCounts(request as Request);
     }
 
     if (rest.length === 1) {

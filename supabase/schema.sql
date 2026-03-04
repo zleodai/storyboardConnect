@@ -101,6 +101,12 @@ CREATE TABLE IF NOT EXISTS applications (
     )
 );
 
+CREATE TABLE IF NOT EXISTS school_user_counts (
+    school       VARCHAR(255) PRIMARY KEY,
+    user_count   INTEGER NOT NULL DEFAULT 0,
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
 CREATE INDEX IF NOT EXISTS idx_artists_school ON artists(school);
@@ -115,3 +121,13 @@ CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects(created_by);
 CREATE INDEX IF NOT EXISTS idx_applications_project ON applications(project_id);
 CREATE INDEX IF NOT EXISTS idx_applications_user ON applications(user_id);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
+
+INSERT INTO school_user_counts (school, user_count, updated_at)
+SELECT school, COUNT(*)::INTEGER, NOW()
+FROM artists
+WHERE school <> ''
+GROUP BY school
+ON CONFLICT (school) DO UPDATE
+SET
+    user_count = EXCLUDED.user_count,
+    updated_at = NOW();
