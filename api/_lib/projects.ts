@@ -81,6 +81,13 @@ type ProjectFilterCountsResponse = {
   timelines: ProjectSchoolCountResponse[];
 };
 
+type ProjectFilterValueRow = {
+  school: string;
+  format: string;
+  production_type: string;
+  timeline: string;
+};
+
 function isMissingRelationError(cause: unknown): cause is { code: string } {
   return Boolean(
     cause &&
@@ -287,46 +294,36 @@ export async function handleGetProjectFilterCounts(request: Request): Promise<Re
   }
 
   try {
-    const [schoolRows, formatRows, productionTypeRows, timelineRows] = await Promise.all([
-      sql<ProjectSchoolCountRow[]>`
-        SELECT school, COUNT(*)::INTEGER AS project_count
-        FROM projects
-        WHERE school <> ''
-        GROUP BY school
-        ORDER BY school ASC
-      `,
-      sql<ProjectSchoolCountRow[]>`
-        SELECT format AS school, COUNT(*)::INTEGER AS project_count
-        FROM projects
-        GROUP BY format
-        ORDER BY format ASC
-      `,
-      sql<ProjectSchoolCountRow[]>`
-        SELECT production_type AS school, COUNT(*)::INTEGER AS project_count
-        FROM projects
-        GROUP BY production_type
-        ORDER BY production_type ASC
-      `,
-      sql<ProjectSchoolCountRow[]>`
-        SELECT timeline AS school, COUNT(*)::INTEGER AS project_count
-        FROM projects
-        GROUP BY timeline
-        ORDER BY timeline ASC
-      `,
-    ]);
+    const rows = await sql<ProjectFilterValueRow[]>`
+      SELECT school, format, production_type, timeline
+      FROM projects
+    `;
 
-    const mapRows = (rows: ProjectSchoolCountRow[]): ProjectSchoolCountResponse[] =>
-      rows.map((row) => ({
-        value: row.school,
-        label: row.school,
-        count: row.project_count,
-      }));
+    const countByValue = (values: string[]): ProjectSchoolCountResponse[] => {
+      const counts = new Map<string, number>();
+
+      for (const value of values) {
+        const normalized = value.trim();
+        if (!normalized) {
+          continue;
+        }
+        counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+      }
+
+      return Array.from(counts.entries())
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([value, count]) => ({
+          value,
+          label: value,
+          count,
+        }));
+    };
 
     const payload: ProjectFilterCountsResponse = {
-      schools: mapRows(schoolRows),
-      formats: mapRows(formatRows),
-      productionTypes: mapRows(productionTypeRows),
-      timelines: mapRows(timelineRows),
+      schools: countByValue(rows.map((row) => row.school)),
+      formats: countByValue(rows.map((row) => row.format)),
+      productionTypes: countByValue(rows.map((row) => row.production_type)),
+      timelines: countByValue(rows.map((row) => row.timeline)),
     };
 
     return json(200, payload);

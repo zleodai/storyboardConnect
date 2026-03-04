@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "test": "vitest",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:mock": "node scripts/seed-mock-data.mjs"
   },
   "dependencies": {
     "jose": "^6.0.8",
