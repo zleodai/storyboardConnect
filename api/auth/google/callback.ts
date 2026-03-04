@@ -1,13 +1,26 @@
 import { parseCookies } from "../../_lib/cookies.js";
 import { getFrontendUrl } from "../../_lib/env.js";
-import { error, getRequestUrl, internalServerError, methodNotAllowed, redirect } from "../../_lib/http.js";
+import {
+  error,
+  getRequestUrl,
+  internalServerError,
+  methodNotAllowed,
+  NodeResponseLike,
+  redirect,
+  RequestLike,
+  sendNodeResponse,
+} from "../../_lib/http.js";
 import { signAuthToken } from "../../_lib/jwt.js";
 import { clearStateCookie, exchangeCodeForUser } from "../../_lib/oauth.js";
 import { upsertUser } from "../../_lib/users.js";
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: RequestLike, response?: NodeResponseLike): Promise<Response | void> {
   if (request.method !== "GET") {
-    return methodNotAllowed(["GET"]);
+    const result = methodNotAllowed(["GET"]);
+    if (response) {
+      return sendNodeResponse(response, result);
+    }
+    return result;
   }
 
   const url = getRequestUrl(request);
@@ -17,9 +30,13 @@ export default async function handler(request: Request): Promise<Response> {
   const secure = url.protocol === "https:";
 
   if (!state || !code || cookies.oauth_state !== state) {
-    return error(400, "invalid oauth state", {
+    const result = error(400, "invalid oauth state", {
       "Set-Cookie": clearStateCookie(secure),
     });
+    if (response) {
+      return sendNodeResponse(response, result);
+    }
+    return result;
   }
 
   try {
@@ -40,10 +57,18 @@ export default async function handler(request: Request): Promise<Response> {
     const frontendUrl = new URL(getFrontendUrl());
     frontendUrl.searchParams.set("token", token);
 
-    return redirect(frontendUrl.toString(), 307, {
+    const result = redirect(frontendUrl.toString(), 307, {
       "Set-Cookie": clearStateCookie(secure),
     });
+    if (response) {
+      return sendNodeResponse(response, result);
+    }
+    return result;
   } catch (cause) {
-    return internalServerError(cause);
+    const result = internalServerError(cause);
+    if (response) {
+      return sendNodeResponse(response, result);
+    }
+    return result;
   }
 }

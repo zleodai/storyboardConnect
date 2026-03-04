@@ -7,6 +7,12 @@ export type RequestLike = {
   json?: () => Promise<unknown>;
 };
 
+export type NodeResponseLike = {
+  statusCode?: number;
+  setHeader: (name: string, value: string | string[]) => void;
+  end: (body?: string) => void;
+};
+
 export function json(status: number, data: unknown, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -109,4 +115,20 @@ export function getPathSegments(request: RequestLike): string[] {
 export function internalServerError(cause: unknown): Response {
   console.error(cause);
   return error(500, "internal server error");
+}
+
+export async function sendNodeResponse(
+  response: NodeResponseLike,
+  result: Response | Promise<Response>,
+): Promise<void> {
+  const resolved = await result;
+
+  response.statusCode = resolved.status;
+
+  resolved.headers.forEach((value, key) => {
+    response.setHeader(key, value);
+  });
+
+  const body = await resolved.text();
+  response.end(body || undefined);
 }

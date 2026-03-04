@@ -1,3 +1,5 @@
+import { getHeader, RequestLike } from "./http.js";
+
 type CookieOptions = {
   path?: string;
   maxAge?: number;
@@ -6,8 +8,8 @@ type CookieOptions = {
   secure?: boolean;
 };
 
-export function parseCookies(request: Request): Record<string, string> {
-  const header = request.headers.get("cookie");
+export function parseCookies(request: RequestLike): Record<string, string> {
+  const header = getHeader(request, "cookie");
   if (!header) {
     return {};
   }

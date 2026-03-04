@@ -1,9 +1,17 @@
-import { json, methodNotAllowed } from "./_lib/http.js";
+import { json, methodNotAllowed, NodeResponseLike, RequestLike, sendNodeResponse } from "./_lib/http.js";
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: RequestLike, response?: NodeResponseLike): Promise<Response | void> {
   if (request.method !== "GET") {
-    return methodNotAllowed(["GET"]);
+    const result = methodNotAllowed(["GET"]);
+    if (response) {
+      return sendNodeResponse(response, result);
+    }
+    return result;
   }
 
-  return json(200, { status: "ok" });
+  const result = json(200, { status: "ok" });
+  if (response) {
+    return sendNodeResponse(response, result);
+  }
+  return result;
 }
