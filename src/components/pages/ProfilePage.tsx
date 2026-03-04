@@ -52,9 +52,10 @@ export const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -81,7 +82,7 @@ export const ProfilePage: React.FC = () => {
     };
 
     loadProfile();
-  }, [user, updateUserProfilePreview]);
+  }, [userId, updateUserProfilePreview]);
 
   const updateForm = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setFormState((current) => (current ? { ...current, [key]: value } : current));
