@@ -4,5 +4,18 @@
     "api/**/*.ts": {
       "maxDuration": 10
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/auth/google", "destination": "/api/auth" },
+    { "source": "/api/auth/google/callback", "destination": "/api/auth" },
+    { "source": "/api/auth/me", "destination": "/api/auth" },
+    { "source": "/api/me/profile", "destination": "/api/auth" },
+    { "source": "/api/artists", "destination": "/api/artists" },
+    { "source": "/api/artists/featured", "destination": "/api/artists" },
+    { "source": "/api/artists/:id", "destination": "/api/artists" },
+    { "source": "/api/projects", "destination": "/api/projects" },
+    { "source": "/api/projects/featured", "destination": "/api/projects" },
+    { "source": "/api/projects/:id", "destination": "/api/projects" },
+    { "source": "/api/projects/:id/apply", "destination": "/api/projects" }
+  ]
 }

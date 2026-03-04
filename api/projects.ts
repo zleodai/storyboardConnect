@@ -1,4 +1,9 @@
-import { handleGetArtistById, handleGetArtists, handleGetFeaturedArtists } from "../_lib/artists.js";
+import {
+  handleApplyToProject,
+  handleGetFeaturedProjects,
+  handleGetProjectById,
+  handleGetProjects,
+} from "./_lib/projects.js";
 import {
   error,
   getPathSegments,
@@ -6,24 +11,28 @@ import {
   NodeResponseLike,
   RequestLike,
   sendNodeResponse,
-} from "../_lib/http.js";
+} from "./_lib/http.js";
 
 async function route(request: RequestLike): Promise<Response> {
   try {
     const segments = getPathSegments(request);
-    const artistsIndex = segments.indexOf("artists");
-    const rest = artistsIndex >= 0 ? segments.slice(artistsIndex + 1) : [];
+    const projectsIndex = segments.indexOf("projects");
+    const rest = projectsIndex >= 0 ? segments.slice(projectsIndex + 1) : [];
 
     if (rest.length === 0) {
-      return handleGetArtists(request as Request);
+      return handleGetProjects(request as Request);
     }
 
     if (rest.length === 1 && rest[0] === "featured") {
-      return handleGetFeaturedArtists(request as Request);
+      return handleGetFeaturedProjects(request as Request);
     }
 
     if (rest.length === 1) {
-      return handleGetArtistById(request as Request);
+      return handleGetProjectById(request as Request);
+    }
+
+    if (rest.length === 2 && rest[1] === "apply") {
+      return handleApplyToProject(request as Request);
     }
 
     return error(404, "not found");
