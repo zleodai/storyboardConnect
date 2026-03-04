@@ -99,10 +99,21 @@ export const Navbar: React.FC = () => {
               Sign Out
             </button>
             <div
-              className="w-8 h-8 rounded-full border border-gray-500 overflow-hidden flex items-center justify-center text-xs font-bold text-white"
-              title={user.email}
+              className={`w-8 h-8 rounded-full border overflow-hidden flex items-center justify-center text-xs font-bold text-white cursor-pointer transition ${
+                currentPage === 'profile' ? 'border-white' : 'border-gray-500 hover:border-white'
+              }`}
+              title={user.name || user.email}
+              onClick={() => setCurrentPage('profile')}
             >
-              {user.email.slice(0, 1).toUpperCase()}
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name || user.email}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                (user.name || user.email).slice(0, 1).toUpperCase()
+              )}
             </div>
           </>
         ) : (

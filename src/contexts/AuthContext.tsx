@@ -7,6 +7,7 @@ interface AuthContextType {
   loading: boolean;
   loginWithGoogle: () => void;
   logout: () => void;
+  updateUserProfilePreview: (updates: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +57,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
   };
 
+  const updateUserProfilePreview = (updates: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>) => {
+    setUser((currentUser) => (currentUser ? { ...currentUser, ...updates } : currentUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -63,6 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loading,
         loginWithGoogle,
         logout,
+        updateUserProfilePreview,
       }}
     >
       {children}

@@ -10,6 +10,7 @@ import { Layout } from './components/layout/Layout';
 import { SignInPage } from './components/pages/SignInPage';
 import { LandingPage } from './components/pages/LandingPage';
 import { GridView } from './components/pages/GridView';
+import { ProfilePage } from './components/pages/ProfilePage';
 import { CommunityPage } from './components/pages/CommunityPage';
 import { NewsPage } from './components/pages/NewsPage';
 import { EventsPage } from './components/pages/EventsPage';
@@ -51,6 +52,8 @@ const AppContent: React.FC = () => {
         return <NewsPage />;
       case 'events':
         return <EventsPage />;
+      case 'profile':
+        return <ProfilePage />;
       default:
         return <GridView />;
     }

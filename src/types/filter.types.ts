@@ -12,7 +12,7 @@ export interface FilterState {
 
 export type ViewMode = 'artist' | 'project';
 
-export type PageType = 'grid' | 'community' | 'news' | 'events';
+export type PageType = 'grid' | 'community' | 'news' | 'events' | 'profile';
 
 export interface FilterOption {
   label: string;

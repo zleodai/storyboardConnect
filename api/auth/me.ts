@@ -1,5 +1,6 @@
 import { error, getHeader, json, methodNotAllowed, NodeResponseLike, RequestLike, sendNodeResponse } from "../_lib/http.js";
 import { verifyAuthToken } from "../_lib/jwt.js";
+import { sql } from "../_lib/db.js";
 
 export default async function handler(request: RequestLike, response?: NodeResponseLike): Promise<Response | void> {
   if (request.method !== "GET") {
@@ -29,10 +30,18 @@ export default async function handler(request: RequestLike, response?: NodeRespo
       return result;
     }
 
+    const [user] = await sql<{ name: string; avatar_url: string | null }[]>`
+      SELECT name, avatar_url
+      FROM users
+      WHERE id = ${payload.sub}
+    `;
+
     const result = json(200, {
       id: payload.sub,
       email: payload.email,
       role: payload.role,
+      name: user?.name,
+      avatarUrl: user?.avatar_url || undefined,
     });
     if (response) {
       return sendNodeResponse(response, result);
