@@ -1,7 +1,7 @@
-import { sql } from "./db";
-import { error, internalServerError, json, methodNotAllowed, parseJsonBody, parseQuery } from "./http";
-import { isUuid, parseProjectFilter, truncate } from "./filters";
-import { verifyAuthToken } from "./jwt";
+import { sql } from "./db.js";
+import { error, internalServerError, json, methodNotAllowed, parseJsonBody, parseQuery } from "./http.js";
+import { isUuid, parseProjectFilter, truncate } from "./filters.js";
+import { verifyAuthToken } from "./jwt.js";
 
 type ProjectRow = {
   id: string;

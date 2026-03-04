@@ -1,4 +1,4 @@
-import { json, methodNotAllowed } from "./_lib/http";
+import { json, methodNotAllowed } from "./_lib/http.js";
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== "GET") {

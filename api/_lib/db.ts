@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { getDatabaseUrl } from "./env";
+import { getDatabaseUrl } from "./env.js";
 
 export const sql = postgres(getDatabaseUrl(), {
   prepare: false,

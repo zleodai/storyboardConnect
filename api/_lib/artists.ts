@@ -1,6 +1,6 @@
-import { sql } from "./db";
-import { error, internalServerError, json, methodNotAllowed, parseQuery } from "./http";
-import { isUuid, parseArtistFilter } from "./filters";
+import { sql } from "./db.js";
+import { error, internalServerError, json, methodNotAllowed, parseQuery } from "./http.js";
+import { isUuid, parseArtistFilter } from "./filters.js";
 
 type ArtistRow = {
   id: string;

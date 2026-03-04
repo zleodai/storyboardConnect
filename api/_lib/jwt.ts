@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
-import { getJwtSecret } from "./env";
+import { getJwtSecret } from "./env.js";
 
 const encoder = new TextEncoder();
 

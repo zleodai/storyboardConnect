@@ -1,6 +1,6 @@
-import { getGoogleOAuthEnv } from "./env";
-import { serializeCookie } from "./cookies";
-import { redirect } from "./http";
+import { getGoogleOAuthEnv } from "./env.js";
+import { serializeCookie } from "./cookies.js";
+import { redirect } from "./http.js";
 
 export type Provider = "google";
 

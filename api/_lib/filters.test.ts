@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseArtistFilter, parseProjectFilter } from './filters';
+import { parseArtistFilter, parseProjectFilter } from './filters.js';
 
 describe('filters', () => {
   it('parses repeated and comma-separated artist params', () => {

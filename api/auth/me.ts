@@ -1,5 +1,5 @@
-import { error, json, methodNotAllowed } from "../_lib/http";
-import { verifyAuthToken } from "../_lib/jwt";
+import { error, json, methodNotAllowed } from "../_lib/http.js";
+import { verifyAuthToken } from "../_lib/jwt.js";
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== "GET") {
