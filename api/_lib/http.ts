@@ -8,6 +8,23 @@ export function json(status: number, data: unknown, headers?: HeadersInit): Resp
   });
 }
 
+export function getRequestUrl(request: Request): URL {
+  try {
+    return new URL(request.url);
+  } catch {
+    const protocol =
+      request.headers.get("x-forwarded-proto") ??
+      request.headers.get("x-forwarded-protocol") ??
+      "https";
+    const host =
+      request.headers.get("x-forwarded-host") ??
+      request.headers.get("host") ??
+      "localhost";
+
+    return new URL(request.url, `${protocol}://${host}`);
+  }
+}
+
 export function error(status: number, message: string, headers?: HeadersInit): Response {
   return json(status, { error: message }, headers);
 }
@@ -17,7 +34,7 @@ export function methodNotAllowed(allowed: string[]): Response {
 }
 
 export function parseQuery(request: Request): URLSearchParams {
-  return new URL(request.url).searchParams;
+  return getRequestUrl(request).searchParams;
 }
 
 export async function parseJsonBody<T>(request: Request): Promise<T> {
@@ -35,7 +52,7 @@ export function redirect(url: string, status = 307, headers?: HeadersInit): Resp
 }
 
 export function getPathSegments(request: Request): string[] {
-  return new URL(request.url).pathname.split("/").filter(Boolean);
+  return getRequestUrl(request).pathname.split("/").filter(Boolean);
 }
 
 export function internalServerError(cause: unknown): Response {

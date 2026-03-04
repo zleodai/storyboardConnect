@@ -1,5 +1,5 @@
 import { sql } from "./db.js";
-import { error, internalServerError, json, methodNotAllowed, parseJsonBody, parseQuery } from "./http.js";
+import { error, getPathSegments, internalServerError, json, methodNotAllowed, parseJsonBody, parseQuery } from "./http.js";
 import { isUuid, parseProjectFilter, truncate } from "./filters.js";
 import { verifyAuthToken } from "./jwt.js";
 
@@ -93,7 +93,7 @@ function mapProject(row: ProjectRow): ProjectResponse {
 }
 
 function getProjectId(request: Request): string {
-  const segments = new URL(request.url).pathname.split("/").filter(Boolean);
+  const segments = getPathSegments(request);
   const projectsIndex = segments.indexOf("projects");
   return projectsIndex >= 0 ? segments[projectsIndex + 1] ?? "" : "";
 }

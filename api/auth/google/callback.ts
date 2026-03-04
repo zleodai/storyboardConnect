@@ -1,6 +1,6 @@
 import { parseCookies } from "../../_lib/cookies.js";
 import { getFrontendUrl } from "../../_lib/env.js";
-import { error, internalServerError, methodNotAllowed, redirect } from "../../_lib/http.js";
+import { error, getRequestUrl, internalServerError, methodNotAllowed, redirect } from "../../_lib/http.js";
 import { signAuthToken } from "../../_lib/jwt.js";
 import { clearStateCookie, exchangeCodeForUser } from "../../_lib/oauth.js";
 import { upsertUser } from "../../_lib/users.js";
@@ -10,7 +10,7 @@ export default async function handler(request: Request): Promise<Response> {
     return methodNotAllowed(["GET"]);
   }
 
-  const url = new URL(request.url);
+  const url = getRequestUrl(request);
   const cookies = parseCookies(request);
   const state = url.searchParams.get("state");
   const code = url.searchParams.get("code");
