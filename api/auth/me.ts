@@ -1,4 +1,4 @@
-import { error, json, methodNotAllowed } from "../_lib/http.js";
+import { error, getHeader, json, methodNotAllowed } from "../_lib/http.js";
 import { verifyAuthToken } from "../_lib/jwt.js";
 
 export default async function handler(request: Request): Promise<Response> {
@@ -6,7 +6,7 @@ export default async function handler(request: Request): Promise<Response> {
     return methodNotAllowed(["GET"]);
   }
 
-  const header = request.headers.get("authorization");
+  const header = getHeader(request, "authorization");
   if (!header || !header.startsWith("Bearer ")) {
     return error(401, "not authenticated");
   }

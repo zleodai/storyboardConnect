@@ -1,5 +1,14 @@
 import { sql } from "./db.js";
-import { error, getPathSegments, internalServerError, json, methodNotAllowed, parseJsonBody, parseQuery } from "./http.js";
+import {
+  error,
+  getHeader,
+  getPathSegments,
+  internalServerError,
+  json,
+  methodNotAllowed,
+  parseJsonBody,
+  parseQuery,
+} from "./http.js";
 import { isUuid, parseProjectFilter, truncate } from "./filters.js";
 import { verifyAuthToken } from "./jwt.js";
 
@@ -112,7 +121,7 @@ async function findProjectById(id: string): Promise<ProjectRow | null> {
 }
 
 function getBearerToken(request: Request): string | null {
-  const header = request.headers.get("authorization");
+  const header = getHeader(request, "authorization");
   if (!header || !header.startsWith("Bearer ")) {
     return null;
   }
