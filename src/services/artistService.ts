@@ -17,6 +17,9 @@ function filterAndSortArtists(artists: Artist[], filters?: Partial<FilterState>)
   if (filters.selectedSchools && filters.selectedSchools.length > 0) {
     result = result.filter((a) => filters.selectedSchools!.includes(a.school));
   }
+  if (filters.selectedSkills && filters.selectedSkills.length > 0) {
+    result = result.filter((a) => a.topSkills.some((skill) => filters.selectedSkills!.includes(skill)));
+  }
   if (filters.selectedBoardTypes && filters.selectedBoardTypes.length > 0) {
     result = result.filter((a) =>
       a.boardTypes.some((bt) => filters.selectedBoardTypes!.includes(bt)),
@@ -89,6 +92,33 @@ export const artistService = {
 
     const response = await apiClient.get<Array<{ label: string; value: string; count?: number }>>(
       '/artists/schools',
+    );
+    return response.data;
+  },
+
+  // GET /artists/skills
+  getSkillCounts: async (): Promise<Array<{ label: string; value: string; count?: number }>> => {
+    if (USE_MOCK_DATA) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const counts = mockArtists.reduce<Record<string, number>>((acc, artist) => {
+        artist.topSkills.forEach((skill) => {
+          acc[skill] = (acc[skill] ?? 0) + 1;
+        });
+        return acc;
+      }, {});
+
+      return Object.entries(counts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([skill, count]) => ({
+          label: skill,
+          value: skill,
+          count,
+        }));
+    }
+
+    const response = await apiClient.get<Array<{ label: string; value: string; count?: number }>>(
+      '/artists/skills',
     );
     return response.data;
   },

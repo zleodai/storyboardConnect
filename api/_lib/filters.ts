@@ -28,6 +28,7 @@ export function parseArrayParam(params: URLSearchParams, key: string): string[] 
 export type ArtistFilter = {
   searchQuery: string;
   selectedSchools: string[];
+  selectedSkills: string[];
   selectedBoardTypes: string[];
   sortBy: "date";
 };
@@ -45,6 +46,7 @@ export function parseArtistFilter(params: URLSearchParams): ArtistFilter {
   return {
     searchQuery: sanitizeString(params.get("searchQuery") ?? ""),
     selectedSchools: parseArrayParam(params, "selectedSchools"),
+    selectedSkills: parseArrayParam(params, "selectedSkills"),
     selectedBoardTypes: parseArrayParam(params, "selectedBoardTypes"),
     sortBy: "date",
   };

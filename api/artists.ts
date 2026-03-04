@@ -3,6 +3,7 @@ import {
   handleGetArtists,
   handleGetFeaturedArtists,
   handleGetSchoolCounts,
+  handleGetSkillCounts,
 } from "./_lib/artists.js";
 import {
   error,
@@ -29,6 +30,10 @@ async function route(request: RequestLike): Promise<Response> {
 
     if (rest.length === 1 && rest[0] === "schools") {
       return handleGetSchoolCounts(request as Request);
+    }
+
+    if (rest.length === 1 && rest[0] === "skills") {
+      return handleGetSkillCounts(request as Request);
     }
 
     if (rest.length === 1) {

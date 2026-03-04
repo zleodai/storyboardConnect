@@ -107,6 +107,71 @@ CREATE TABLE IF NOT EXISTS school_user_counts (
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS project_school_counts (
+    school         VARCHAR(255) PRIMARY KEY,
+    project_count  INTEGER NOT NULL DEFAULT 0,
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE OR REPLACE FUNCTION refresh_project_school_count(target_school VARCHAR(255))
+RETURNS VOID AS $$
+DECLARE
+    normalized_school VARCHAR(255);
+    current_count INTEGER;
+BEGIN
+    normalized_school := NULLIF(BTRIM(target_school), '');
+
+    IF normalized_school IS NULL THEN
+        RETURN;
+    END IF;
+
+    SELECT COUNT(*)::INTEGER
+    INTO current_count
+    FROM projects
+    WHERE school = normalized_school;
+
+    IF current_count <= 0 THEN
+        DELETE FROM project_school_counts
+        WHERE school = normalized_school;
+        RETURN;
+    END IF;
+
+    INSERT INTO project_school_counts (school, project_count, updated_at)
+    VALUES (normalized_school, current_count, NOW())
+    ON CONFLICT (school) DO UPDATE
+    SET
+        project_count = EXCLUDED.project_count,
+        updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sync_project_school_counts_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        PERFORM refresh_project_school_count(OLD.school);
+        RETURN OLD;
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+        IF OLD.school IS DISTINCT FROM NEW.school THEN
+            PERFORM refresh_project_school_count(OLD.school);
+        END IF;
+        PERFORM refresh_project_school_count(NEW.school);
+        RETURN NEW;
+    END IF;
+
+    PERFORM refresh_project_school_count(NEW.school);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_sync_project_school_counts ON projects;
+CREATE TRIGGER trg_sync_project_school_counts
+AFTER INSERT OR UPDATE OR DELETE ON projects
+FOR EACH ROW
+EXECUTE FUNCTION sync_project_school_counts_trigger();
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
 CREATE INDEX IF NOT EXISTS idx_artists_school ON artists(school);
@@ -130,4 +195,14 @@ GROUP BY school
 ON CONFLICT (school) DO UPDATE
 SET
     user_count = EXCLUDED.user_count,
+    updated_at = NOW();
+
+INSERT INTO project_school_counts (school, project_count, updated_at)
+SELECT school, COUNT(*)::INTEGER, NOW()
+FROM projects
+WHERE school <> ''
+GROUP BY school
+ON CONFLICT (school) DO UPDATE
+SET
+    project_count = EXCLUDED.project_count,
     updated_at = NOW();

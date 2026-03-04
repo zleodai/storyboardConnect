@@ -11,6 +11,7 @@ interface FilterContextType {
 const initialFilters: FilterState = {
   searchQuery: '',
   selectedSchools: [],
+  selectedSkills: [],
   selectedBoardTypes: [],
   selectedFormats: [],
   selectedProductionTypes: [],

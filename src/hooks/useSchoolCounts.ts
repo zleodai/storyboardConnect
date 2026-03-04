@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { artistService } from '../services/artistService';
 import { FilterOption } from '../types/filter.types';
+import { ViewMode } from '../types/filter.types';
 
-export const useSchoolCounts = (enabled: boolean) => {
+export const useSchoolCounts = (viewMode: ViewMode | null) => {
   const [schools, setSchools] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!viewMode) {
       setSchools([]);
       setLoading(false);
       return;
@@ -27,7 +28,7 @@ export const useSchoolCounts = (enabled: boolean) => {
     };
 
     loadSchools();
-  }, [enabled]);
+  }, [viewMode]);
 
   return { schools, loading };
 };

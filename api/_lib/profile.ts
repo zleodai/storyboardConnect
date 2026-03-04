@@ -74,6 +74,15 @@ type ProfileResponse = {
 
 const DEFAULT_BANNER = "/images/banner_main.jpg";
 
+function isMissingRelationError(cause: unknown): cause is { code: string } {
+  return Boolean(
+    cause &&
+      typeof cause === "object" &&
+      "code" in cause &&
+      (cause as { code?: string }).code === "42P01",
+  );
+}
+
 function truncate(value: string, maxLength: number): string {
   return value.trim().slice(0, maxLength);
 }
@@ -172,29 +181,36 @@ async function syncSchoolCount(school: string): Promise<void> {
     return;
   }
 
-  const [countRow] = await sql<{ user_count: number }[]>`
-    SELECT COUNT(*)::INTEGER AS user_count
-    FROM artists
-    WHERE school = ${normalizedSchool}
-  `;
-
-  const userCount = countRow?.user_count ?? 0;
-  if (userCount <= 0) {
-    await sql`
-      DELETE FROM school_user_counts
+  try {
+    const [countRow] = await sql<{ user_count: number }[]>`
+      SELECT COUNT(*)::INTEGER AS user_count
+      FROM artists
       WHERE school = ${normalizedSchool}
     `;
-    return;
-  }
 
-  await sql`
-    INSERT INTO school_user_counts (school, user_count, updated_at)
-    VALUES (${normalizedSchool}, ${userCount}, NOW())
-    ON CONFLICT (school) DO UPDATE
-    SET
-      user_count = EXCLUDED.user_count,
-      updated_at = NOW()
-  `;
+    const userCount = countRow?.user_count ?? 0;
+    if (userCount <= 0) {
+      await sql`
+        DELETE FROM school_user_counts
+        WHERE school = ${normalizedSchool}
+      `;
+      return;
+    }
+
+    await sql`
+      INSERT INTO school_user_counts (school, user_count, updated_at)
+      VALUES (${normalizedSchool}, ${userCount}, NOW())
+      ON CONFLICT (school) DO UPDATE
+      SET
+        user_count = EXCLUDED.user_count,
+        updated_at = NOW()
+    `;
+  } catch (cause) {
+    if (isMissingRelationError(cause)) {
+      return;
+    }
+    throw cause;
+  }
 }
 
 async function syncAffectedSchoolCounts(previousSchool: string, nextSchool: string): Promise<void> {

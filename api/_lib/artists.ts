@@ -80,6 +80,20 @@ type SchoolCountResponse = {
   count: number;
 };
 
+type SkillCountRow = {
+  value: string;
+  user_count: number;
+};
+
+function isMissingRelationError(cause: unknown): cause is { code: string } {
+  return Boolean(
+    cause &&
+      typeof cause === "object" &&
+      "code" in cause &&
+      (cause as { code?: string }).code === "42P01",
+  );
+}
+
 function mapArtist(row: ArtistRow, portfolio: PortfolioRow[]): ArtistResponse {
   const response: ArtistResponse = {
     id: row.id,
@@ -188,6 +202,12 @@ export async function handleGetArtists(request: Request): Promise<Response> {
         return false;
       }
       if (
+        filter.selectedSkills.length > 0 &&
+        !row.top_skills.some((value) => filter.selectedSkills.includes(value))
+      ) {
+        return false;
+      }
+      if (
         filter.selectedBoardTypes.length > 0 &&
         !row.board_types.some((value) => filter.selectedBoardTypes.includes(value))
       ) {
@@ -245,6 +265,55 @@ export async function handleGetSchoolCounts(request: Request): Promise<Response>
     const payload: SchoolCountResponse[] = rows.map((row) => ({
       value: row.school,
       label: row.school,
+      count: row.user_count,
+    }));
+
+    return json(200, payload);
+  } catch (cause) {
+    if (isMissingRelationError(cause)) {
+      try {
+        const rows = await sql<SchoolCountRow[]>`
+          SELECT school, COUNT(*)::INTEGER AS user_count
+          FROM artists
+          WHERE school <> ''
+          GROUP BY school
+          ORDER BY school ASC
+        `;
+
+        const payload: SchoolCountResponse[] = rows.map((row) => ({
+          value: row.school,
+          label: row.school,
+          count: row.user_count,
+        }));
+
+        return json(200, payload);
+      } catch (fallbackCause) {
+        return internalServerError(fallbackCause);
+      }
+    }
+
+    return internalServerError(cause);
+  }
+}
+
+export async function handleGetSkillCounts(request: Request): Promise<Response> {
+  if (request.method !== "GET") {
+    return methodNotAllowed(["GET"]);
+  }
+
+  try {
+    const rows = await sql<SkillCountRow[]>`
+      SELECT skill.value AS value, COUNT(*)::INTEGER AS user_count
+      FROM artists
+      CROSS JOIN LATERAL unnest(top_skills) AS skill(value)
+      WHERE skill.value <> ''
+      GROUP BY skill.value
+      ORDER BY skill.value ASC
+    `;
+
+    const payload: SchoolCountResponse[] = rows.map((row) => ({
+      value: row.value,
+      label: row.value,
       count: row.user_count,
     }));
 

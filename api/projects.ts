@@ -1,8 +1,10 @@
 import {
   handleApplyToProject,
   handleGetFeaturedProjects,
+  handleGetProjectFilterCounts,
   handleGetProjectById,
   handleGetProjects,
+  handleGetProjectSchoolCounts,
 } from "./_lib/projects.js";
 import {
   error,
@@ -25,6 +27,14 @@ async function route(request: RequestLike): Promise<Response> {
 
     if (rest.length === 1 && rest[0] === "featured") {
       return handleGetFeaturedProjects(request as Request);
+    }
+
+    if (rest.length === 1 && rest[0] === "schools") {
+      return handleGetProjectSchoolCounts(request as Request);
+    }
+
+    if (rest.length === 1 && rest[0] === "filter-counts") {
+      return handleGetProjectFilterCounts(request as Request);
     }
 
     if (rest.length === 1) {

@@ -12,9 +12,12 @@
     { "source": "/api/me/profile", "destination": "/api/auth" },
     { "source": "/api/artists", "destination": "/api/artists" },
     { "source": "/api/artists/schools", "destination": "/api/artists" },
+    { "source": "/api/artists/skills", "destination": "/api/artists" },
     { "source": "/api/artists/featured", "destination": "/api/artists" },
     { "source": "/api/artists/:id", "destination": "/api/artists" },
     { "source": "/api/projects", "destination": "/api/projects" },
+    { "source": "/api/projects/schools", "destination": "/api/projects" },
+    { "source": "/api/projects/filter-counts", "destination": "/api/projects" },
     { "source": "/api/projects/featured", "destination": "/api/projects" },
     { "source": "/api/projects/:id", "destination": "/api/projects" },
     { "source": "/api/projects/:id/apply", "destination": "/api/projects" }

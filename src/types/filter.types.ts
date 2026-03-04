@@ -3,6 +3,7 @@ export type SortBy = 'date' | 'views';
 export interface FilterState {
   searchQuery: string;
   selectedSchools: string[];
+  selectedSkills: string[];
   selectedBoardTypes: string[];
   selectedFormats: string[];
   selectedProductionTypes: string[];

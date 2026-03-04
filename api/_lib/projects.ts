@@ -63,6 +63,33 @@ type ApplyRequest = {
   portfolioLink?: string;
 };
 
+type ProjectSchoolCountRow = {
+  school: string;
+  project_count: number;
+};
+
+type ProjectSchoolCountResponse = {
+  value: string;
+  label: string;
+  count: number;
+};
+
+type ProjectFilterCountsResponse = {
+  schools: ProjectSchoolCountResponse[];
+  formats: ProjectSchoolCountResponse[];
+  productionTypes: ProjectSchoolCountResponse[];
+  timelines: ProjectSchoolCountResponse[];
+};
+
+function isMissingRelationError(cause: unknown): cause is { code: string } {
+  return Boolean(
+    cause &&
+      typeof cause === "object" &&
+      "code" in cause &&
+      (cause as { code?: string }).code === "42P01",
+  );
+}
+
 function mapProject(row: ProjectRow): ProjectResponse {
   const response: ProjectResponse = {
     id: row.id,
@@ -203,6 +230,106 @@ export async function handleGetFeaturedProjects(request: Request): Promise<Respo
     `;
 
     return json(200, rows.map(mapProject));
+  } catch (cause) {
+    return internalServerError(cause);
+  }
+}
+
+export async function handleGetProjectSchoolCounts(request: Request): Promise<Response> {
+  if (request.method !== "GET") {
+    return methodNotAllowed(["GET"]);
+  }
+
+  try {
+    const rows = await sql<ProjectSchoolCountRow[]>`
+      SELECT school, project_count
+      FROM project_school_counts
+      ORDER BY school ASC
+    `;
+
+    const payload: ProjectSchoolCountResponse[] = rows.map((row) => ({
+      value: row.school,
+      label: row.school,
+      count: row.project_count,
+    }));
+
+    return json(200, payload);
+  } catch (cause) {
+    if (isMissingRelationError(cause)) {
+      try {
+        const rows = await sql<ProjectSchoolCountRow[]>`
+          SELECT school, COUNT(*)::INTEGER AS project_count
+          FROM projects
+          WHERE school <> ''
+          GROUP BY school
+          ORDER BY school ASC
+        `;
+
+        const payload: ProjectSchoolCountResponse[] = rows.map((row) => ({
+          value: row.school,
+          label: row.school,
+          count: row.project_count,
+        }));
+
+        return json(200, payload);
+      } catch (fallbackCause) {
+        return internalServerError(fallbackCause);
+      }
+    }
+
+    return internalServerError(cause);
+  }
+}
+
+export async function handleGetProjectFilterCounts(request: Request): Promise<Response> {
+  if (request.method !== "GET") {
+    return methodNotAllowed(["GET"]);
+  }
+
+  try {
+    const [schoolRows, formatRows, productionTypeRows, timelineRows] = await Promise.all([
+      sql<ProjectSchoolCountRow[]>`
+        SELECT school, COUNT(*)::INTEGER AS project_count
+        FROM projects
+        WHERE school <> ''
+        GROUP BY school
+        ORDER BY school ASC
+      `,
+      sql<ProjectSchoolCountRow[]>`
+        SELECT format AS school, COUNT(*)::INTEGER AS project_count
+        FROM projects
+        GROUP BY format
+        ORDER BY format ASC
+      `,
+      sql<ProjectSchoolCountRow[]>`
+        SELECT production_type AS school, COUNT(*)::INTEGER AS project_count
+        FROM projects
+        GROUP BY production_type
+        ORDER BY production_type ASC
+      `,
+      sql<ProjectSchoolCountRow[]>`
+        SELECT timeline AS school, COUNT(*)::INTEGER AS project_count
+        FROM projects
+        GROUP BY timeline
+        ORDER BY timeline ASC
+      `,
+    ]);
+
+    const mapRows = (rows: ProjectSchoolCountRow[]): ProjectSchoolCountResponse[] =>
+      rows.map((row) => ({
+        value: row.school,
+        label: row.school,
+        count: row.project_count,
+      }));
+
+    const payload: ProjectFilterCountsResponse = {
+      schools: mapRows(schoolRows),
+      formats: mapRows(formatRows),
+      productionTypes: mapRows(productionTypeRows),
+      timelines: mapRows(timelineRows),
+    };
+
+    return json(200, payload);
   } catch (cause) {
     return internalServerError(cause);
   }

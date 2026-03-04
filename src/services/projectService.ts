@@ -78,6 +78,79 @@ export const projectService = {
     return response.data;
   },
 
+  // GET /projects/schools
+  getSchoolCounts: async (): Promise<Array<{ label: string; value: string; count?: number }>> => {
+    if (USE_MOCK_DATA) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const counts = mockProjects.reduce<Record<string, number>>((acc, project) => {
+        acc[project.school] = (acc[project.school] ?? 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(counts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([school, count]) => ({
+          label: school,
+          value: school,
+          count,
+        }));
+    }
+
+    const response = await apiClient.get<Array<{ label: string; value: string; count?: number }>>(
+      '/projects/schools',
+    );
+    return response.data;
+  },
+
+  // GET /projects/filter-counts
+  getFilterCounts: async (): Promise<{
+    schools: Array<{ label: string; value: string; count?: number }>;
+    formats: Array<{ label: string; value: string; count?: number }>;
+    productionTypes: Array<{ label: string; value: string; count?: number }>;
+    timelines: Array<{ label: string; value: string; count?: number }>;
+  }> => {
+    if (USE_MOCK_DATA) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const schools: Record<string, number> = {};
+      const formats: Record<string, number> = {};
+      const productionTypes: Record<string, number> = {};
+      const timelines: Record<string, number> = {};
+
+      mockProjects.forEach((project) => {
+        schools[project.school] = (schools[project.school] ?? 0) + 1;
+        formats[project.format] = (formats[project.format] ?? 0) + 1;
+        productionTypes[project.productionType] = (productionTypes[project.productionType] ?? 0) + 1;
+        timelines[project.timeline] = (timelines[project.timeline] ?? 0) + 1;
+      });
+
+      const mapCounts = (counts: Record<string, number>) =>
+        Object.entries(counts)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([value, count]) => ({
+            label: value,
+            value,
+            count,
+          }));
+
+      return {
+        schools: mapCounts(schools),
+        formats: mapCounts(formats),
+        productionTypes: mapCounts(productionTypes),
+        timelines: mapCounts(timelines),
+      };
+    }
+
+    const response = await apiClient.get<{
+      schools: Array<{ label: string; value: string; count?: number }>;
+      formats: Array<{ label: string; value: string; count?: number }>;
+      productionTypes: Array<{ label: string; value: string; count?: number }>;
+      timelines: Array<{ label: string; value: string; count?: number }>;
+    }>('/projects/filter-counts');
+    return response.data;
+  },
+
   // POST /projects/:id/apply
   applyToProject: async (projectId: string, applicationData: any): Promise<void> => {
     if (USE_MOCK_DATA) {
